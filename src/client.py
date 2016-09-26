@@ -8,6 +8,7 @@ import json
 
 import config
 import message
+from client_interface import ClientInterface
 
 
 class Client:
@@ -71,9 +72,15 @@ class Client:
 
 
 if __name__ == "__main__":
+    def some(text): pass
+    ci = ClientInterface(some)
+    ci.startInterface()
+    exit(1)
+
     client = Client()
     client.main()
     exit(1)
+
     client.connect()
 
     client.sendMessage(message.dumps({"code": 100, "username": sys.argv[1]}))
