@@ -1,4 +1,5 @@
 import urwid
+import time
 
 
 class CmdPropmt(urwid.Edit):
@@ -77,20 +78,29 @@ class ClientInterface:
     def startInterface(self):
         self.main_loop = urwid.MainLoop(self.main_layout, [])
         self.main_loop.handle_mouse = False
-        self.main_loop.run()
+
+        try:
+            self.main_loop.run()
+        except KeyboardInterrupt:
+            return
+
+        # FIXME
+        raise Exception
 
     def scrollBottom(self):
         list_len = len(self.text_list_walker) - 1
+        if list_len <= 0:
+            return
         self.text_list.set_focus(list_len)
 
     def addLine(self, line):
         self.text_list_walker.append(urwid.Text(line))
+        self.main_loop.draw_screen()
 
     def onCmdPromptChange(self, edit, new_edit_text):
         pass
 
     def onCmdPromptDone(self, edit, text):
-        self.addLine(text)
         self.scrollBottom()
         self.new_cmd_callback(text)
 
