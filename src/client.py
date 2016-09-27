@@ -54,24 +54,22 @@ class Client:
             self.interface.addLine("Unknown Command")
 
     def handleRecv(self, obj):
-        self.interface.addLine("In here")
         if obj["code"] == 200:
-            self.interface.addLine("200")
             self.interface.addLine(obj["Res"])
 
         elif obj["code"] == 201:
-            self.interface.addLine("201")
-            for msg in obj["messages"]:
-                dt = datetime.fromtimestamp(
-                    int(msg["timestamp"] / 1000)
-                ).strftime('%Y-%m-%d %H:%M:%S')
+            msg = obj["message"]
 
-                msg_str = "%s|%s|%s" % (
-                    dt,
-                    msg["username"],
-                    msg["message"])
+            dt = datetime.fromtimestamp(
+                int(msg["timestamp"] / 1000)
+            ).strftime('%Y-%m-%d %H:%M:%S')
 
-                self.interface.addLine(msg_str)
+            msg_str = "%s|%s|%s" % (
+                dt,
+                msg["username"],
+                msg["message"])
+
+            self.interface.addLine(msg_str)
 
 
     def main(self):

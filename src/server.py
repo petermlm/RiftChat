@@ -13,7 +13,6 @@ from client_info import ClientInfo
 class Server:
     def __init__(self):
         self.client_info = {}
-        self.chat_entries = []
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -73,18 +72,10 @@ class Server:
 
         elif obj["code"] == 101:
             chat_msg = ChatMessage(self.client_info[sock].username, obj["message"])
-            self.chat_entries.append(chat_msg)
 
-        elif obj["code"] == 102:
-            msgs = []
-
-            for i in self.chat_entries:
-                if i.timestamp <= obj["ref_time"]:
-                    continue
-
-                msgs.append(i.getObj())
-
-            sock.send(message.dumps({"code": 201, "messages": msgs}))
+            for client in self.client_info:
+                msg = message.dumps({"code": 201, "message": chat_msg.getObj()})
+                self.client_info[client].conn.send(msg)
 
         self.client_info[sock].buff = new_buff
 
