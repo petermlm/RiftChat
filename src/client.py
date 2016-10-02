@@ -5,9 +5,12 @@ import socket
 import select
 import time
 import json
+from datetime import datetime
 
 import config
 import message
+from client_interface import ClientInterface
+from client_network import ClientNetwork
 
 
 class Client:
@@ -15,81 +18,71 @@ class Client:
         self.messages = []
         self.buff = bytes([])
 
-    def connect(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((config.ip, config.port))
+        self.network = ClientNetwork(self.handleRecv)
+        self.interface = ClientInterface(self.handleInput)
 
-    def close(self):
-        self.socket.close()
+    def handleInput(self, input_str):
+        # If this is not a command, then it is a regular message
+        if input_str[0] != ":":
+            msg = message.dumps({"code": 100, "message": input_str})
+            self.network.sendMessage(msg)
+            return
 
-    def sendMessage(self, message):
-        self.socket.send(message)
+        # Else, this is a command, so handle it
+        cmd_args = input_str[1:].split()
+        cmd = cmd_args[0]
+        args = cmd_args[1:]
 
-    def getMessage(self):
-        ready = select.select([self.socket], [], [], 1)
-        if ready[0]:
-            return self.socket.recv(1024)
+        if cmd in ["quit", "q"]:
+            self.interface.addLine("Disconnecting...")
+            self.network.close()
+            self.interface.addLine("Shutting down...")
+            self.interface.exit()
+            return
 
-        return bytes([])
+        elif cmd in ["username", "un", "me"]:
+            if len(args) != 1:
+                self.interface.sendMessage("Usage :{username|un|me} new_username")
+                return
+            msg = message.dumps({"code": 101, "username": args[0]})
+            self.network.sendMessage(msg)
+            return
+
+        else:
+            self.interface.addLine("Unknown Command")
+
+    def handleRecv(self, obj):
+        if obj["code"] == 200:
+            msg = obj["message"]
+
+            dt = datetime.fromtimestamp(
+                int(msg["timestamp"] / 1000)
+            ).strftime('%Y-%m-%d %H:%M:%S')
+
+            msg_str = "%s|%s|%s" % (
+                dt,
+                msg["username"],
+                msg["message"])
+
+            self.interface.addLine(msg_str)
+
+        elif obj["code"] == 201:
+            self.interface.addLine(obj["Res"])
+
+        elif obj["code"] == 202:
+            msg_str = "User %s changed name to %s" % (
+                obj["old"], obj["new"])
+            self.interface.addLine(msg_str)
+
+        elif obj["code"] == 203:
+            msg_str = "User %s disconnected" % (obj["username"])
+            self.interface.addLine(msg_str)
+
 
     def main(self):
-        self.connect()
-
-        while True:
-            input_str = input("$ ").split(" ")
-
-            cmd = input_str[0]
-
-            if cmd.lower() in ["q", "quit"]:
-                break
-
-            elif cmd.lower() in ["username", "un", "me"]:
-                msg = message.dumps({"code": 100, "username": input_str[1]})
-                self.sendMessage(msg)
-
-            elif cmd.lower() in ["send", "s"]:
-                msg = message.dumps({"code": 101, "message": " ".join(input_str[1:])})
-                self.sendMessage(msg)
-
-            elif cmd.lower() in ["messages", "msgs", "g"]:
-                now = int(time.time() * 1000)
-                msg = message.dumps({"code": 102, "ref_time": now - 50000})
-                self.sendMessage(msg)
-
-            elif cmd.lower() in ["get", "g"]:
-                self.buff += self.getMessage()
-
-                self.buff, obj = message.loads(self.buff)
-
-                if obj is not None:
-                    print(obj)
-
-            else:
-                print("Unknown Command")
-
-        self.close()
+        self.network.connect()
+        self.interface.startInterface()
 
 
 if __name__ == "__main__":
-    client = Client()
-    client.main()
-    exit(1)
-    client.connect()
-
-    client.sendMessage(message.dumps({"code": 100, "username": sys.argv[1]}))
-    time.sleep(0.5)
-    client.sendMessage(message.dumps({"code": 101, "message": "This is a message"}))
-    time.sleep(0.5)
-    client.sendMessage(message.dumps({"code": 101, "message": "This too, is a message"}))
-    time.sleep(0.5)
-    client.sendMessage(message.dumps({"code": 102, "ref_time": 0}))
-
-    time.sleep(1)
-
-    print("Getting messages")
-    buff, msgs = message.loads(client.getMessage())
-    print(msgs)
-    buff, msgs = message.loads(buff)
-    print(msgs)
-
-    client.close()
+    Client().main()

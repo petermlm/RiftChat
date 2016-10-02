@@ -13,7 +13,6 @@ from client_info import ClientInfo
 class Server:
     def __init__(self):
         self.client_info = {}
-        self.chat_entries = []
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -49,6 +48,7 @@ class Server:
 
         if len(buff) == 0:
             print("Disconnection of %s" % (sock))
+            self.sendAllDisconnect(self.client_info[sock].username)
             del self.client_info[sock]
             return
 
@@ -68,25 +68,33 @@ class Server:
             return
 
         if obj["code"] == 100:
-            self.client_info[sock].username = obj["username"]
-            sock.send(message.dumps({"code": 200, "Res": "Welcome: %s" % (obj["username"])}))
+            chat_msg = ChatMessage(self.client_info[sock].username, obj["message"])
+            self.sendAllMessage(chat_msg)
 
         elif obj["code"] == 101:
-            chat_msg = ChatMessage(self.client_info[sock].username, obj["message"])
-            self.chat_entries.append(chat_msg)
-
-        elif obj["code"] == 102:
-            msgs = []
-
-            for i in self.chat_entries:
-                if i.timestamp <= obj["ref_time"]:
-                    continue
-
-                msgs.append(i.getObj())
-
-            sock.send(message.dumps({"code": 201, "messages": msgs}))
+            old_username = self.client_info[sock].username
+            self.client_info[sock].username = obj["username"]
+            self.usernameChanged(old_username, self.client_info[sock].username)
+            sock.send(message.dumps({"code": 201, "Res": "Welcome: %s" % (obj["username"])}))
 
         self.client_info[sock].buff = new_buff
+
+    def sendAllConnect(self):
+        pass
+
+    def sendAllDisconnect(self, username):
+        self.sendAll({"code": 203, "username": username})
+
+    def sendAllMessage(self, chat_msg):
+        self.sendAll({"code": 200, "message": chat_msg.getObj()})
+
+    def usernameChanged(self, old, new):
+        self.sendAll({"code": 202, "old": old, "new": new})
+
+    def sendAll(self, obj):
+        for client in self.client_info:
+            msg = message.dumps(obj)
+            self.client_info[client].conn.send(msg)
 
 
 if __name__ == "__main__":
