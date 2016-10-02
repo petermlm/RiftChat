@@ -1,5 +1,9 @@
 RiftChat
 
+# Versions
+
+v0.0 - First working prototype implementation
+
 # Description
 
 This is just a chat experiment.
@@ -11,25 +15,50 @@ There is no password, authentication, chat rooms, private messages, etc.
 
 # RiftChat Protocol
 
-The protocol is simple. The first byte is a code which identifies the type of
-message. The rest is a payload corresponding to the message.
+The protocol is simple. Every message is made up of one byte plus a payload.
+The first byte states the size of the payload. The payload is just a json file.
 
-# Client
+Each json file contains at least a field called code. The rest of the json is
+according to the following:
 
-Set username
+## From Client to Server
 
-    100 - {"username": "New Username"}
+### Send message - 100
 
-Send message
+Client sends a new message to the server. Every connected user will receive
+this message.
 
-    101 - {"message": "New Message"}
+    {"code": 100, "message": "New Message"}
 
-Fetch messages after timestamp (no including it)
+### Set username - 101
 
-    102 - ref_timestamp
+Client changes it's username.
 
-# Server
+    {"code": 101, "username": "New Username"}
 
-Results from message fetch
+## From Server to Client
 
-    200 - messages_num - 'msgs'
+### Send message - 200
+
+New message to be displayed. Sent to all users including the original author of
+the message.
+
+    {"code": 200, "message": chat_msg.getObj()}
+
+### Set username - 201
+
+State to the user that asked for a username change that is was done.
+
+    {"code": 201, "Res": "Some text"}
+
+### Changed username - 202
+
+State to everyone that a user as changed it's username.
+
+    {"code": 202, "old": "Old username", "new": "New username"}
+
+### User disconnected - 203
+
+State to everyone that a user as disconnected.
+
+    {"code": 203, "username": "Disconnected username"}
