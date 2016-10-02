@@ -42,7 +42,7 @@ class Client:
 
         elif cmd in ["username", "un", "me"]:
             if len(args) != 1:
-                self.interface.sendMessage("Usage :{username|un|me} new_username")
+                self.interface.addLine("Usage :{username|un|me} new_username")
                 return
             msg = message.dumps({"code": 101, "username": args[0]})
             self.network.sendMessage(msg)
@@ -67,14 +67,17 @@ class Client:
             self.interface.addLine(msg_str)
 
         elif obj["code"] == 201:
-            self.interface.addLine(obj["Res"])
+            self.interface.addLine("Username %s connected" % (obj["new"]))
 
         elif obj["code"] == 202:
+            self.interface.addLine("Your new username is: %s" % (obj["new"]))
+
+        elif obj["code"] == 203:
             msg_str = "User %s changed name to %s" % (
                 obj["old"], obj["new"])
             self.interface.addLine(msg_str)
 
-        elif obj["code"] == 203:
+        elif obj["code"] == 204:
             msg_str = "User %s disconnected" % (obj["username"])
             self.interface.addLine(msg_str)
 

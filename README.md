@@ -6,12 +6,7 @@ v0.0 - First working prototype implementation
 
 # Description
 
-This is just a chat experiment.
-
-A client just connects through TCP giving a username, sends messages and
-receives messages.
-
-There is no password, authentication, chat rooms, private messages, etc.
+TODO
 
 # RiftChat Protocol
 
@@ -45,20 +40,27 @@ the message.
 
     {"code": 200, "message": chat_msg.getObj()}
 
-### Set username - 201
+### User connected - 201
 
-State to the user that asked for a username change that is was done.
+State to everyone that a user as connected.
 
-    {"code": 201, "Res": "Some text"}
+    {"code": 201, "new": "New username"}
 
-### Changed username - 202
+### Give new username - 202
+
+Give out new username to specific user. Maybe on connection or on username name
+change.
+
+    {"code": 202, "new": "New username"}
+
+### Changed username - 203
 
 State to everyone that a user as changed it's username.
 
-    {"code": 202, "old": "Old username", "new": "New username"}
+    {"code": 203, "old": "Old username", "new": "New username"}
 
-### User disconnected - 203
+### User disconnected - 204
 
 State to everyone that a user as disconnected.
 
-    {"code": 203, "username": "Disconnected username"}
+    {"code": 204, "username": "Disconnected username"}
