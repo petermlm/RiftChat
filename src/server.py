@@ -48,6 +48,7 @@ class Server:
 
         if len(buff) == 0:
             print("Disconnection of %s" % (sock))
+            self.sendAllDisconnect(self.client_info[sock].username)
             del self.client_info[sock]
             return
 
@@ -67,17 +68,33 @@ class Server:
             return
 
         if obj["code"] == 100:
-            self.client_info[sock].username = obj["username"]
-            sock.send(message.dumps({"code": 200, "Res": "Welcome: %s" % (obj["username"])}))
+            chat_msg = ChatMessage(self.client_info[sock].username, obj["message"])
+            self.sendAllMessage(chat_msg)
 
         elif obj["code"] == 101:
-            chat_msg = ChatMessage(self.client_info[sock].username, obj["message"])
-
-            for client in self.client_info:
-                msg = message.dumps({"code": 201, "message": chat_msg.getObj()})
-                self.client_info[client].conn.send(msg)
+            old_username = self.client_info[sock].username
+            self.client_info[sock].username = obj["username"]
+            self.usernameChanged(old_username, self.client_info[sock].username)
+            sock.send(message.dumps({"code": 201, "Res": "Welcome: %s" % (obj["username"])}))
 
         self.client_info[sock].buff = new_buff
+
+    def sendAllConnect(self):
+        pass
+
+    def sendAllDisconnect(self, username):
+        self.sendAll({"code": 203, "username": username})
+
+    def sendAllMessage(self, chat_msg):
+        self.sendAll({"code": 200, "message": chat_msg.getObj()})
+
+    def usernameChanged(self, old, new):
+        self.sendAll({"code": 202, "old": old, "new": new})
+
+    def sendAll(self, obj):
+        for client in self.client_info:
+            msg = message.dumps(obj)
+            self.client_info[client].conn.send(msg)
 
 
 if __name__ == "__main__":

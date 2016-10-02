@@ -84,8 +84,8 @@ class ClientInterface:
         except KeyboardInterrupt:
             return
 
-        # FIXME
-        raise Exception
+    def exit(self):
+        raise urwid.ExitMainLoop()
 
     def scrollBottom(self):
         list_len = len(self.text_list_walker) - 1
