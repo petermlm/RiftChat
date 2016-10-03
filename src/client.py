@@ -7,18 +7,19 @@ import time
 import json
 from datetime import datetime
 
-import config
+from config import Config
 import message
 from client_interface import ClientInterface
 from client_network import ClientNetwork
 
 
 class Client:
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
         self.messages = []
         self.buff = bytes([])
 
-        self.network = ClientNetwork(self.handleRecv)
+        self.network = ClientNetwork(config, self.handleRecv)
         self.interface = ClientInterface(self.handleInput)
 
     def handleInput(self, input_str):
@@ -88,4 +89,5 @@ class Client:
 
 
 if __name__ == "__main__":
-    Client().main()
+    config = Config.clientConf()
+    Client(config).main()

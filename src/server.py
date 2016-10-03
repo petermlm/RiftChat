@@ -4,20 +4,22 @@
 import socket
 from select import select
 
-import config
+from config import Config
 import message
 from chat_message import ChatMessage
 from client_info import ClientInfo
 
 
 class Server:
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
+
         self.client_info = {}
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        self.socket.bind((config.ip, config.port))
+        self.socket.bind((self.config["host"], self.config["port"]))
         self.socket.listen(1)
 
     def main(self):
@@ -82,9 +84,6 @@ class Server:
 
         self.client_info[sock].buff = new_buff
 
-    def sendAllConnect(self):
-        pass
-
     def sendAllMessage(self, chat_msg):
         self.sendAll({"code": 200, "message": chat_msg.getObj()})
 
@@ -104,5 +103,5 @@ class Server:
 
 
 if __name__ == "__main__":
-    server = Server()
-    server.main()
+    config = Config.serverConf()
+    Server(config).main()
