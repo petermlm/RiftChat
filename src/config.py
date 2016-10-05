@@ -18,7 +18,6 @@ class Config:
             config = {"port": Config.port}
 
         config["host"] = Config.host
-        print(config)
         return config
 
     def clientConf(file_name=None):
