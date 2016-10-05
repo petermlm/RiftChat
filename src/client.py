@@ -23,13 +23,20 @@ class Client:
         self.interface = ClientInterface(self.handleInput)
 
     def handleInput(self, input_str):
+        # No input
+        if len(input_str) == 0:
+            return
+
         # If this is not a command, then it is a regular message
         if input_str[0] != ":":
             msg = message.dumps({"code": 100, "message": input_str})
             self.network.sendMessage(msg)
             return
 
-        # Else, this is a command, so handle it
+        # Else, this is a command, so handle it. Unless if is empty
+        if len(input_str) == 1:
+            return
+
         cmd_args = input_str[1:].split()
         cmd = cmd_args[0]
         args = cmd_args[1:]
