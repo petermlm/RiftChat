@@ -109,10 +109,14 @@ class Server(Daemon):
 
 
 if __name__ == "__main__":
-    config = Config.serverConf()
+    if len(sys.argv) == 3:
+        config = Config.serverConf(sys.argv[2])
+    else:
+        config = Config.serverConf()
+
     server = Server(pid_file, config)
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) >= 2:
         if 'start' == sys.argv[1]:
             server.start()
             sys.exit(0)
