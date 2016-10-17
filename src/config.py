@@ -2,8 +2,8 @@ from os.path import expanduser
 
 
 class Config:
-    host = "127.0.0.1"
-    port = 8000
+    default_host = "127.0.0.1"
+    default_port = 8000
 
     server_file_name = expanduser("rift_server.conf")
     client_file_name = expanduser("~/.rift_client")
@@ -14,9 +14,9 @@ class Config:
         try:
             config = Config.readConfigFile(file_name)
         except FileNotFoundError:
-            config = {"port": Config.port}
+            config = {"port": Config.default_port}
 
-        config["host"] = Config.host
+        config["host"] = Config.default_host
         return config
 
     def clientConf(file_name=None):
@@ -26,7 +26,7 @@ class Config:
         try:
             config = Config.readConfigFile(file_name)
         except FileNotFoundError:
-            config = {"host": Config.host, "port": Config.port}
+            config = {"host": Config.default_host, "port": Config.default_port}
 
         return config
 
@@ -46,6 +46,6 @@ class Config:
             return
 
         if key_value[0] in ["host", "username"]:
-            config_file[key_value[0]] = key_value[1]
+            config_file[key_value[0]] = key_value[1].strip()
         elif key_value[0] in ["port"]:
-            config_file[key_value[0]] = int(key_value[1])
+            config_file[key_value[0]] = int(key_value[1].strip())
