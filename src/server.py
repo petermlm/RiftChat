@@ -1,26 +1,34 @@
 #!/usr/bin/env python3
 
 
+import sys
 import socket
 from select import select
 
-import config
+from daemon import Daemon
+from config import Config
 import message
 from chat_message import ChatMessage
 from client_info import ClientInfo
 
 
-class Server:
-    def __init__(self):
+pid_file = "/tmp/rift_server.pid"
+
+
+class Server(Daemon):
+    def __init__(self, pid_file, config):
+        super().__init__(pidfile=pid_file)
+
+        self.config = config
         self.client_info = {}
 
+    def run(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        self.socket.bind((config.ip, config.port))
+        self.socket.bind((self.config["host"], self.config["port"]))
         self.socket.listen(1)
 
-    def main(self):
         normal_shutdown = False
 
         while True:
@@ -59,6 +67,9 @@ class Server:
         print("New connection from %s" % (conn))
         self.client_info[conn] = ClientInfo(conn)
 
+        conn.send(message.dumps({"code": 202, "new": self.client_info[conn].username}))
+        self.sendAllConnect(self.client_info[conn].username)
+
     def parseClientMessage(self, sock, buff):
         self.client_info[sock].buff += buff
 
@@ -74,22 +85,22 @@ class Server:
         elif obj["code"] == 101:
             old_username = self.client_info[sock].username
             self.client_info[sock].username = obj["username"]
+            sock.send(message.dumps({"code": 202, "new": obj["username"]}))
             self.usernameChanged(old_username, self.client_info[sock].username)
-            sock.send(message.dumps({"code": 201, "Res": "Welcome: %s" % (obj["username"])}))
 
         self.client_info[sock].buff = new_buff
-
-    def sendAllConnect(self):
-        pass
-
-    def sendAllDisconnect(self, username):
-        self.sendAll({"code": 203, "username": username})
 
     def sendAllMessage(self, chat_msg):
         self.sendAll({"code": 200, "message": chat_msg.getObj()})
 
+    def sendAllConnect(self, new):
+        self.sendAll({"code": 201, "new": new})
+
     def usernameChanged(self, old, new):
-        self.sendAll({"code": 202, "old": old, "new": new})
+        self.sendAll({"code": 203, "old": old, "new": new})
+
+    def sendAllDisconnect(self, username):
+        self.sendAll({"code": 204, "username": username})
 
     def sendAll(self, obj):
         for client in self.client_info:
@@ -98,5 +109,30 @@ class Server:
 
 
 if __name__ == "__main__":
-    server = Server()
-    server.main()
+    if len(sys.argv) == 3:
+        config = Config.serverConf(sys.argv[2])
+    else:
+        config = Config.serverConf()
+
+    server = Server(pid_file, config)
+
+    if len(sys.argv) >= 2:
+        if 'start' == sys.argv[1]:
+            server.start()
+            sys.exit(0)
+
+        elif 'stop' == sys.argv[1]:
+            server.stop()
+            sys.exit(0)
+
+        elif 'restart' == sys.argv[1]:
+            server.restart()
+            sys.exit(0)
+
+        else:
+            print("Unknown command")
+            sys.exit(1)
+
+    else:
+        print("usage: %s start|stop|restart" % sys.argv[0])
+        sys.exit(1)

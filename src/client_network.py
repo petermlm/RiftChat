@@ -3,17 +3,18 @@ from select import select
 from queue import Queue
 from threading import Thread
 
-import config
+from config import Config
 import message
 
 
 class ClientNetwork:
-    def __init__(self, callback):
+    def __init__(self, config, callback):
+        self.config = config
         self.callback = callback
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((config.ip, config.port))
+        self.socket.connect((self.config["host"], self.config["port"]))
 
         self.client_recv = ClientRecv(self.socket, self.callback)
         self.client_recv.start()
