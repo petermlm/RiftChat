@@ -96,5 +96,9 @@ class Client:
 
 
 if __name__ == "__main__":
-    config = Config.clientConf()
+    if len(sys.argv) == 2:
+        config = Config.clientConf(sys.argv[1])
+    else:
+        config = Config.clientConf()
+
     Client(config).main()

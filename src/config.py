@@ -5,12 +5,11 @@ class Config:
     host = "127.0.0.1"
     port = 8000
 
-    server_file_name = expanduser("~/.rift_server")
+    server_file_name = expanduser("rift_server.conf")
     client_file_name = expanduser("~/.rift_client")
 
-    def serverConf(file_name=None):
-        if file_name is None:
-            file_name = Config.server_file_name
+    def serverConf():
+        file_name = Config.server_file_name
 
         try:
             config = Config.readConfigFile(file_name)
