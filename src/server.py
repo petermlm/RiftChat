@@ -38,6 +38,7 @@ class Server(Daemon):
             try:
                 (infd, _, _) = select(sockets, [], [])
             except KeyboardInterrupt:
+                self.sendAllServeDown()
                 normal_shutdown = True
                 break
 
@@ -105,6 +106,9 @@ class Server(Daemon):
 
     def sendAllDisconnect(self, username):
         self.sendAll({"code": 204, "username": username})
+
+    def sendAllServeDown(self):
+        self.sendAll({"code": 205})
 
     def sendAll(self, obj):
         for client in self.client_info:

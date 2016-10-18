@@ -42,10 +42,7 @@ class Client:
         args = cmd_args[1:]
 
         if cmd in ["quit", "q"]:
-            self.interface.addLine("Disconnecting...")
-            self.network.close()
-            self.interface.addLine("Shutting down...")
-            self.interface.exit()
+            self.close()
             return
 
         elif cmd in ["username", "un", "me"]:
@@ -89,6 +86,18 @@ class Client:
             msg_str = "User %s disconnected" % (obj["username"])
             self.interface.addLine(msg_str)
 
+        elif obj["code"] == 205:
+            print("Nope")
+            self.interface.addLine("!!! Server is Down !!!")
+            self.interface.addLine("Shutting down in 3 seconds")
+            time.sleep(3)
+            self.close()
+
+    def close(self):
+        self.interface.addLine("Disconnecting...")
+        self.network.close()
+        self.interface.addLine("Shutting down...")
+        self.interface.exit()
 
     def main(self):
         self.network.connect()
