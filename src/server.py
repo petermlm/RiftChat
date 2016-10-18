@@ -52,7 +52,11 @@ class Server(Daemon):
             print("Shutting down.")
 
     def messageFromClient(self, sock):
-        buff = sock.recv(1024)
+        try:
+            buff = sock.recv(1024)
+        except ConnectionResetError:
+            # A client connection fell
+            buff = bytes([])
 
         if len(buff) == 0:
             print("Disconnection of %s" % (sock))
