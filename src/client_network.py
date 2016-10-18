@@ -21,7 +21,12 @@ class ClientNetwork:
 
     def close(self):
         self.client_recv.terminate()
-        self.client_recv.join()
+
+        try:
+            self.client_recv.join()
+        except:
+            pass
+
         self.socket.close()
 
     def sendMessage(self, message):

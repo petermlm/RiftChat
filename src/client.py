@@ -87,7 +87,6 @@ class Client:
             self.interface.addLine(msg_str)
 
         elif obj["code"] == 205:
-            print("Nope")
             self.interface.addLine("!!! Server is Down !!!")
             self.interface.addLine("Shutting down in 3 seconds")
             time.sleep(3)

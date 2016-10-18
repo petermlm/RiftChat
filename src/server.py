@@ -3,6 +3,7 @@
 
 import sys
 import socket
+import signal
 from select import select
 
 from daemon import Daemon
@@ -16,13 +17,17 @@ pid_file = "/tmp/rift_server.pid"
 
 
 class Server(Daemon):
-    def __init__(self, pid_file, config):
-        super().__init__(pidfile=pid_file)
+    def __init__(self, pid_file, config, stdout=None, stderr=None):
+        super().__init__(pidfile=pid_file, stdout=stdout, stderr=stderr)
 
         self.config = config
         self.client_info = {}
 
     def run(self):
+        def handler(_a, _b):
+            pass
+        signal.signal(signal.SIGTERM, handler)
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
@@ -37,7 +42,7 @@ class Server(Daemon):
 
             try:
                 (infd, _, _) = select(sockets, [], [])
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, InterruptedError):
                 self.sendAllServeDown()
                 normal_shutdown = True
                 break
@@ -122,7 +127,10 @@ if __name__ == "__main__":
     else:
         config = Config.serverConf()
 
-    server = Server(pid_file, config)
+    server = Server(pid_file,
+                    config,
+                    stdout="/tmp/rift_stdout.log",
+                    stderr="/tmp/rift_stderr.log")
 
     if len(sys.argv) >= 2:
         if 'start' == sys.argv[1]:
