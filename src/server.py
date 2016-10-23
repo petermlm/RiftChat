@@ -8,9 +8,10 @@ from select import select
 
 from daemon import Daemon
 from config import Config
-import message
 from chat_message import ChatMessage
 from client_info import ClientInfo
+import message
+import log
 
 
 pid_file = "/tmp/rift_server.pid"
@@ -55,7 +56,7 @@ class Server(Daemon):
                     self.newConnection(sock)
 
         if normal_shutdown:
-            print("Shutting down.")
+            log.stdout("Shutting down.")
 
     def messageFromClient(self, sock):
         try:
@@ -65,7 +66,7 @@ class Server(Daemon):
             buff = bytes([])
 
         if len(buff) == 0:
-            print("Disconnection of %s" % (sock))
+            log.stdout("Disconnection of %s" % (sock))
             self.sendAllDisconnect(self.client_info[sock].username)
             del self.client_info[sock]
             return
@@ -74,7 +75,7 @@ class Server(Daemon):
 
     def newConnection(self, sock):
         conn, addr = sock.accept()
-        print("New connection from %s" % (conn))
+        log.stdout("New connection from %s" % (conn))
         self.client_info[conn] = ClientInfo(conn)
 
         conn.send(message.dumps({"code": 202, "new": self.client_info[conn].username}))
