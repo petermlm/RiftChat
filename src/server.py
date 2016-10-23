@@ -3,26 +3,32 @@
 
 import sys
 import socket
+import signal
 from select import select
 
 from daemon import Daemon
 from config import Config
-import message
 from chat_message import ChatMessage
 from client_info import ClientInfo
+import message
+import log
 
 
 pid_file = "/tmp/rift_server.pid"
 
 
 class Server(Daemon):
-    def __init__(self, pid_file, config):
-        super().__init__(pidfile=pid_file)
+    def __init__(self, pid_file, config, stdout=None, stderr=None):
+        super().__init__(pidfile=pid_file, stdout=stdout, stderr=stderr)
 
         self.config = config
         self.client_info = {}
 
     def run(self):
+        def handler(_a, _b):
+            pass
+        signal.signal(signal.SIGTERM, handler)
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
@@ -37,7 +43,8 @@ class Server(Daemon):
 
             try:
                 (infd, _, _) = select(sockets, [], [])
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, InterruptedError):
+                self.sendAllServeDown()
                 normal_shutdown = True
                 break
 
@@ -49,7 +56,7 @@ class Server(Daemon):
                     self.newConnection(sock)
 
         if normal_shutdown:
-            print("Shutting down.")
+            log.stdout("Shutting down.")
 
     def messageFromClient(self, sock):
         try:
@@ -59,7 +66,7 @@ class Server(Daemon):
             buff = bytes([])
 
         if len(buff) == 0:
-            print("Disconnection of %s" % (sock))
+            log.stdout("Disconnection of %s" % (sock))
             self.sendAllDisconnect(self.client_info[sock].username)
             del self.client_info[sock]
             return
@@ -68,7 +75,7 @@ class Server(Daemon):
 
     def newConnection(self, sock):
         conn, addr = sock.accept()
-        print("New connection from %s" % (conn))
+        log.stdout("New connection from %s" % (conn))
         self.client_info[conn] = ClientInfo(conn)
 
         conn.send(message.dumps({"code": 202, "new": self.client_info[conn].username}))
@@ -106,6 +113,9 @@ class Server(Daemon):
     def sendAllDisconnect(self, username):
         self.sendAll({"code": 204, "username": username})
 
+    def sendAllServeDown(self):
+        self.sendAll({"code": 205})
+
     def sendAll(self, obj):
         for client in self.client_info:
             msg = message.dumps(obj)
@@ -118,7 +128,10 @@ if __name__ == "__main__":
     else:
         config = Config.serverConf()
 
-    server = Server(pid_file, config)
+    server = Server(pid_file,
+                    config,
+                    stdout="/tmp/rift_stdout.log",
+                    stderr="/tmp/rift_stderr.log")
 
     if len(sys.argv) >= 2:
         if 'start' == sys.argv[1]:
