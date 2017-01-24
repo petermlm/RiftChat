@@ -1,5 +1,5 @@
 import sys, os, time, atexit
-from signal import SIGTERM
+from signal import SIGKILL
 
 class Daemon:
     def __init__(self,
@@ -93,7 +93,7 @@ class Daemon:
         # Try killing the daemon process
         try:
             while 1:
-                os.kill(pid, SIGTERM)
+                os.kill(pid, SIGKILL)
                 time.sleep(0.1)
 
         except OSError as err:
