@@ -64,3 +64,9 @@ State to everyone that a user as changed it's username.
 State to everyone that a user as disconnected.
 
     {"code": 204, "username": "Disconnected username"}
+
+### Server went down - 205
+
+State to everyone that the server went down
+
+    {"code": 205}

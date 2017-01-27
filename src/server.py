@@ -3,30 +3,36 @@
 
 import sys
 import socket
+import signal
 from select import select
 
 from daemon import Daemon
 from config import Config
-import message
 from chat_message import ChatMessage
 from client_info import ClientInfo
+import message
+import log
 
 
 pid_file = "/tmp/rift_server.pid"
 
 
 class Server(Daemon):
-    def __init__(self, pid_file, config):
-        super().__init__(pidfile=pid_file)
+    def __init__(self, pid_file, config, stdout=None, stderr=None):
+        super().__init__(pidfile=pid_file, stdout=stdout, stderr=stderr)
 
         self.config = config
         self.client_info = {}
 
     def run(self):
+        def handler(_a, _b):
+            pass
+        signal.signal(signal.SIGTERM, handler)
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        self.socket.bind((self.config["host"], self.config["port"]))
+        self.socket.bind(("0.0.0.0", self.config["port"]))
         self.socket.listen(1)
 
         normal_shutdown = False
@@ -37,7 +43,8 @@ class Server(Daemon):
 
             try:
                 (infd, _, _) = select(sockets, [], [])
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, InterruptedError):
+                self.sendAllServeDown()
                 normal_shutdown = True
                 break
 
@@ -49,13 +56,17 @@ class Server(Daemon):
                     self.newConnection(sock)
 
         if normal_shutdown:
-            print("Shutting down.")
+            log.stdout("Shutting down.")
 
     def messageFromClient(self, sock):
-        buff = sock.recv(1024)
+        try:
+            buff = sock.recv(1024)
+        except ConnectionResetError:
+            # A client connection fell
+            buff = bytes([])
 
         if len(buff) == 0:
-            print("Disconnection of %s" % (sock))
+            log.stdout("Disconnection of %s" % (sock))
             self.sendAllDisconnect(self.client_info[sock].username)
             del self.client_info[sock]
             return
@@ -64,7 +75,7 @@ class Server(Daemon):
 
     def newConnection(self, sock):
         conn, addr = sock.accept()
-        print("New connection from %s" % (conn))
+        log.stdout("New connection from %s" % (conn))
         self.client_info[conn] = ClientInfo(conn)
 
         conn.send(message.dumps({"code": 202, "new": self.client_info[conn].username}))
@@ -102,37 +113,79 @@ class Server(Daemon):
     def sendAllDisconnect(self, username):
         self.sendAll({"code": 204, "username": username})
 
+    def sendAllServeDown(self):
+        self.sendAll({"code": 205})
+
     def sendAll(self, obj):
         for client in self.client_info:
             msg = message.dumps(obj)
             self.client_info[client].conn.send(msg)
 
 
+def printUsage():
+    usage_str = \
+        "Usage:" \
+        "\n" \
+        "\tserver.py -d [ start | stop | restart ] {config}\n" \
+        "\tserver.py {config}" \
+        "\n" \
+        "The first way to execute will use riftChat server as a daemon. The" \
+        "second optional parametera string for a config file"
+
+    print(usage_str)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        config = Config.serverConf(sys.argv[2])
+    la = len(sys.argv)
+
+    if la < 1 or la > 4:
+        printUsage()
+        exit(1)
+
+    daemon = False
+    daemon_cmd = ""
+    config_path = ""
+
+    last_arg_index = 1
+
+    # If flag -d is present, this should be used as a daemon
+    if la > last_arg_index and sys.argv[last_arg_index] == "-d":
+        daemon = True
+        daemon_cmd = sys.argv[2]
+        last_arg_index = 3
+
+    # Get configuration file, if any
+    if la > last_arg_index:
+        config_path = sys.argv[last_arg_index]
+        config = Config.serverConf(config_path)
     else:
         config = Config.serverConf()
 
-    server = Server(pid_file, config)
+    server = Server(pid_file,
+                    config,
+                    stdout="/tmp/rift_stdout.log",
+                    stderr="/tmp/rift_stderr.log")
 
-    if len(sys.argv) >= 2:
-        if 'start' == sys.argv[1]:
+    # Runs until killed
+    if not daemon:
+        print("Server running on port %s" % (server.config["port"]))
+        server.run()
+        exit(0)
+
+    # Performs daemon operation
+    else:
+        if daemon_cmd == "start":
             server.start()
             sys.exit(0)
 
-        elif 'stop' == sys.argv[1]:
+        elif daemon_cmd == "stop":
             server.stop()
             sys.exit(0)
 
-        elif 'restart' == sys.argv[1]:
+        elif daemon_cmd == "restart":
             server.restart()
             sys.exit(0)
 
-        else:
-            print("Unknown command")
-            sys.exit(1)
-
-    else:
-        print("usage: %s start|stop|restart" % sys.argv[0])
+        print("Unknown daemon command")
+        printUsage()
         sys.exit(1)
