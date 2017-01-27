@@ -2,19 +2,52 @@ RiftChat
 
 # Versions
 
-v0.0 - First working prototype implementation
+v0.3.1
 
 # Description
 
-TODO
+A simple chat made to text basic networking in Python.
+
+# How To Run
+
+## With Docker
+
+Go into the docker directory and execute the `build.sh` script. This is build
+two images, one for the server and another for the client.
+
+Then run the server with `run_server.sh` and a client with `run_client.sh`. The
+client script receives an argument that is appended to the name of the
+container. So running:
+
+    ./run_client.sh c1
+
+will make a container with the name:
+
+    rift-chat-client-c1
+
+## Without docker
+
+You will need Python3 for both client and server. For the client you will also
+need urwid as specified in the requirements.txt file.
+
+Usage of server is:
+
+    server.py -d [ start | stop | restart ] {config}\n
+    server.py {config}
+
+The first way to execute will use riftChat server as a daemon. The second
+optional parameter string for a config file.
+
+Client is just
+
+    client.py {config}
+
+Where config may be a path for a config file.
 
 # RiftChat Protocol
 
-The protocol is simple. Every message is made up of one byte plus a payload.
-The first byte states the size of the payload. The payload is just a json file.
-
-Each json file contains at least a field called code. The rest of the json is
-according to the following:
+The protocol is simple. Every message is json. The json always has a code.
+Depending on that code, it may have other arguments.
 
 ## From Client to Server
 
