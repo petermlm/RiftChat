@@ -6,7 +6,7 @@ class Config:
     default_port = 8000
 
     server_file_name = expanduser("confs/rift_server.conf")
-    client_file_name = expanduser("~/.rift_client")
+    client_file_name = expanduser("confs/rift_client.conf")
 
     def serverConf(file_name=None):
         if file_name is None:

@@ -122,9 +122,42 @@ class Server(Daemon):
             self.client_info[client].conn.send(msg)
 
 
+def printUsage():
+    usage_str = \
+        "Usage:" \
+        "\n" \
+        "\tserver.py -d [ start | stop | restart ] {config}\n" \
+        "\tserver.py {config}" \
+        "\n" \
+        "The first way to execute will use riftChat server as a daemon. The" \
+        "second optional parametera string for a config file"
+
+    print(usage_str)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        config = Config.serverConf(sys.argv[2])
+    la = len(sys.argv)
+
+    if la < 1 or la > 4:
+        printUsage()
+        exit(1)
+
+    daemon = False
+    daemon_cmd = ""
+    config_path = ""
+
+    last_arg_index = 1
+
+    # If flag -d is present, this should be used as a daemon
+    if la > last_arg_index and sys.argv[last_arg_index] == "-d":
+        daemon = True
+        daemon_cmd = sys.argv[2]
+        last_arg_index = 3
+
+    # Get configuration file, if any
+    if la > last_arg_index:
+        config_path = sys.argv[last_arg_index]
+        config = Config.serverConf(config_path)
     else:
         config = Config.serverConf()
 
@@ -133,23 +166,26 @@ if __name__ == "__main__":
                     stdout="/tmp/rift_stdout.log",
                     stderr="/tmp/rift_stderr.log")
 
-    if len(sys.argv) >= 2:
-        if 'start' == sys.argv[1]:
+    # Runs until killed
+    if not daemon:
+        print("Server running on port %s" % (server.config["port"]))
+        server.run()
+        exit(0)
+
+    # Performs daemon operation
+    else:
+        if daemon_cmd == "start":
             server.start()
             sys.exit(0)
 
-        elif 'stop' == sys.argv[1]:
+        elif daemon_cmd == "stop":
             server.stop()
             sys.exit(0)
 
-        elif 'restart' == sys.argv[1]:
+        elif daemon_cmd == "restart":
             server.restart()
             sys.exit(0)
 
-        else:
-            print("Unknown command")
-            sys.exit(1)
-
-    else:
-        print("usage: %s start|stop|restart" % sys.argv[0])
+        print("Unknown daemon command")
+        printUsage()
         sys.exit(1)
