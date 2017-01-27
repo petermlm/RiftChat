@@ -130,7 +130,7 @@ def printUsage():
         "\tserver.py {config}" \
         "\n" \
         "The first way to execute will use riftChat server as a daemon. The" \
-        "second optional parametera string for a config file"
+        "second optional parameter string for a config file"
 
     print(usage_str)
 

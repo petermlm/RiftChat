@@ -1,2 +1,2 @@
 FROM python:3-onbuild
-CMD [ "python", "./src/client.py" ]
+CMD [ "python", "./src/client.py", "/tmp/confs/rift_client.conf" ]
