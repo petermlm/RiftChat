@@ -12,7 +12,7 @@ A simple chat made to text basic networking in Python.
 
 ## With Docker
 
-Go into the docker directory and execute the `build.sh` script. This is build
+Go into the docker directory and execute the `build.sh` script. This will build
 two images, one for the server and another for the client.
 
 Then run the server with `run_server.sh` and a client with `run_client.sh`. The
