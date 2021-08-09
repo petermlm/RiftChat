@@ -1,12 +1,8 @@
 RiftChat
 
-# Versions
-
-v0.3.1
-
 # Description
 
-A simple chat made to text basic networking in Python.
+A simple chat made to experiment with basic networking in Python.
 
 # How To Run
 
@@ -28,21 +24,18 @@ will make a container with the name:
 ## Without docker
 
 You will need Python3 for both client and server. For the client you will also
-need urwid as specified in the requirements.txt file.
+need urwid as specified in the requirements.client.txt file.
 
 Usage of server is:
 
-    server.py -d [ start | stop | restart ] {config}\n
-    server.py {config}
+    server.py
+    server.py -d [ start | stop | restart ]
 
-The first way to execute will use riftChat server as a daemon. The second
-optional parameter string for a config file.
+The second way to execute will use riftChat server as a daemon.
 
 Client is just
 
-    client.py {config}
-
-Where config may be a path for a config file.
+    client.py
 
 # RiftChat Protocol
 

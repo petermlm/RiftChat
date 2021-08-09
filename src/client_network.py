@@ -1,6 +1,5 @@
 import socket
 from select import select
-from queue import Queue
 from threading import Thread
 
 from config import Config
@@ -8,13 +7,12 @@ import message
 
 
 class ClientNetwork:
-    def __init__(self, config, callback):
-        self.config = config
+    def __init__(self, callback):
         self.callback = callback
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((self.config["host"], self.config["port"]))
+        self.socket.connect((Config.host, Config.port))
 
         self.client_recv = ClientRecv(self.socket, self.callback)
         self.client_recv.start()

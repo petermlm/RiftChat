@@ -1,25 +1,19 @@
 #!/usr/bin/env python3
 
-import sys
-import socket
-import select
 import time
-import json
 from datetime import datetime
 
-from config import Config
 import message
 from client_interface import ClientInterface
 from client_network import ClientNetwork
 
 
 class Client:
-    def __init__(self, config):
-        self.config = config
+    def __init__(self):
         self.messages = []
         self.buff = bytes([])
 
-        self.network = ClientNetwork(config, self.handleRecv)
+        self.network = ClientNetwork(self.handleRecv)
         self.interface = ClientInterface(self.handleInput)
 
     def handleInput(self, input_str):
@@ -60,14 +54,11 @@ class Client:
         if obj["code"] == 200:
             msg = obj["message"]
 
-            dt = datetime.fromtimestamp(
-                int(msg["timestamp"] / 1000)
-            ).strftime('%Y-%m-%d %H:%M:%S')
+            dt = datetime.fromtimestamp(int(msg["timestamp"] / 1000)).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
 
-            msg_str = "%s|%s|%s" % (
-                dt,
-                msg["username"],
-                msg["message"])
+            msg_str = "%s|%s|%s" % (dt, msg["username"], msg["message"])
 
             self.interface.addLine(msg_str)
 
@@ -78,8 +69,7 @@ class Client:
             self.interface.addLine("Your new username is: %s" % (obj["new"]))
 
         elif obj["code"] == 203:
-            msg_str = "User %s changed name to %s" % (
-                obj["old"], obj["new"])
+            msg_str = "User %s changed name to %s" % (obj["old"], obj["new"])
             self.interface.addLine(msg_str)
 
         elif obj["code"] == 204:
@@ -104,9 +94,4 @@ class Client:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        config = Config.clientConf(sys.argv[1])
-    else:
-        config = Config.clientConf()
-
-    Client(config).main()
+    Client().main()

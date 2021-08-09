@@ -11,4 +11,4 @@ fi
 mkdir -p confs
 cp $conf_file confs/rift_server.conf
 
-sudo docker build -t rift-chat-server -f Dockerfile.server ..
+docker build -t rift-chat-server -f Dockerfile.server ..
