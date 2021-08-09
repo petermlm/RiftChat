@@ -1,9 +1,8 @@
 #!/bin/bash
 
-sudo docker run \
-    -dit \
+docker run \
+    -it \
     --rm \
     --name rift-chat-server \
-    -v $(pwd)/confs:/tmp/confs \
-    -p8000:8000 \
+    -p8010:8010 \
     rift-chat-server

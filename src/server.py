@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import sys
 import socket
 import signal
@@ -18,21 +17,20 @@ pid_file = "/tmp/rift_server.pid"
 
 
 class Server(Daemon):
-    def __init__(self, pid_file, config, stdout=None, stderr=None):
+    def __init__(self, pid_file, stdout=None, stderr=None):
         super().__init__(pidfile=pid_file, stdout=stdout, stderr=stderr)
-
-        self.config = config
         self.client_info = {}
 
     def run(self):
         def handler(_a, _b):
             pass
+
         signal.signal(signal.SIGTERM, handler)
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        self.socket.bind(("0.0.0.0", self.config["port"]))
+        self.socket.bind(("0.0.0.0", Config.port))
         self.socket.listen(1)
 
         normal_shutdown = False
@@ -123,14 +121,14 @@ class Server(Daemon):
 
 
 def printUsage():
-    usage_str = \
-        "Usage:" \
-        "\n" \
-        "\tserver.py -d [ start | stop | restart ] {config}\n" \
-        "\tserver.py {config}" \
-        "\n" \
-        "The first way to execute will use riftChat server as a daemon. The" \
-        "second optional parameter string for a config file"
+    usage_str = (
+        "Usage:"
+        "\n"
+        "\tserver.py\n"
+        "\tserver.py -d [ start | stop | restart ]\n"
+        "\n"
+        "Use the second option to run the server as a daemon."
+    )
 
     print(usage_str)
 
@@ -144,7 +142,6 @@ if __name__ == "__main__":
 
     daemon = False
     daemon_cmd = ""
-    config_path = ""
 
     last_arg_index = 1
 
@@ -154,21 +151,13 @@ if __name__ == "__main__":
         daemon_cmd = sys.argv[2]
         last_arg_index = 3
 
-    # Get configuration file, if any
-    if la > last_arg_index:
-        config_path = sys.argv[last_arg_index]
-        config = Config.serverConf(config_path)
-    else:
-        config = Config.serverConf()
-
-    server = Server(pid_file,
-                    config,
-                    stdout="/tmp/rift_stdout.log",
-                    stderr="/tmp/rift_stderr.log")
+    server = Server(
+        pid_file, stdout="/tmp/rift_stdout.log", stderr="/tmp/rift_stderr.log"
+    )
 
     # Runs until killed
     if not daemon:
-        print("Server running on port %s" % (server.config["port"]))
+        print("Server running on port %s" % (Config.port))
         server.run()
         exit(0)
 
