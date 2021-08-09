@@ -35,7 +35,7 @@ class Client:
         cmd = cmd_args[0]
         args = cmd_args[1:]
 
-        if cmd in ["quit", "q"]:
+        if cmd in ["quit", "q", "exit"]:
             self.close()
             return
 

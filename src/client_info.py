@@ -8,9 +8,7 @@ class ClientInfo:
         self.buff = bytes([])
 
     def randomName(self):
-        choices = list(range(48, 58)) + \
-                  list(range(65, 91)) + \
-                  list(range(97, 123))
+        choices = list(range(48, 58)) + list(range(65, 91)) + list(range(97, 123))
 
         res = ""
 

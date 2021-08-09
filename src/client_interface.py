@@ -1,5 +1,4 @@
 import urwid
-import time
 
 
 class CmdPropmt(urwid.Edit):
@@ -62,11 +61,14 @@ class ClientInterface:
         self.div = urwid.Divider("=")
 
         # The main layout
-        self.main_layout = urwid.Pile([
-            ("flow", self.div),
-            self.text_list,
-            ("flow", self.div),
-            ("flow", self.cmd_prompt_pile)])
+        self.main_layout = urwid.Pile(
+            [
+                ("flow", self.div),
+                self.text_list,
+                ("flow", self.div),
+                ("flow", self.cmd_prompt_pile),
+            ]
+        )
         self.main_layout.focus_position = 3
 
         # Set signals
