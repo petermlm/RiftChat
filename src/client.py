@@ -13,8 +13,8 @@ class Client:
         self.messages = []
         self.buff = bytes([])
 
-        self.network = ClientNetwork(self.handleRecv)
         self.interface = ClientInterface(self.handleInput)
+        self.network = ClientNetwork(self.handleRecv)
 
     def handleInput(self, input_str):
         # No input

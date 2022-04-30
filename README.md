@@ -1,6 +1,4 @@
-RiftChat
-
-# Description
+# RiftChat
 
 A simple chat made to experiment with basic networking in Python.
 
@@ -8,34 +6,35 @@ A simple chat made to experiment with basic networking in Python.
 
 ## With Docker
 
-Go into the docker directory and execute the `build.sh` script. This will build
-two images, one for the server and another for the client.
+There are two containers, for the server and for the client. Simply build them:
 
-Then run the server with `run_server.sh` and a client with `run_client.sh`. The
-client script receives an argument that is appended to the name of the
-container. So running:
+    docker-compose build
 
-    ./run_client.sh c1
+Containers can be started now. For the server simply do `up`, for clients,
+`run` should be used:
 
-will make a container with the name:
+    docker-compose up server
+    docker-compose run --rm client
 
-    rift-chat-client-c1
+Several clients can be started.
 
 ## Without docker
 
-You will need Python3 for both client and server. For the client you will also
-need urwid as specified in the requirements.client.txt file.
+For the server, only Python 3 is needed. For the client, urwid is needed, as
+specified in the requirements.client.txt file. It is recommended that a virtual
+environment is create for it.
 
 Usage of server is:
 
-    server.py
-    server.py -d [ start | stop | restart ]
+    python src/server.py
+    python src/server.py -d [ start | stop | restart ]
 
-The second way to execute will use riftChat server as a daemon.
+The first way will simply start the server, the second way to execute will use
+riftChat server as a daemon.
 
 Client is just
 
-    client.py
+    python src/client.py
 
 # RiftChat Protocol
 

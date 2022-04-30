@@ -1,13 +1,11 @@
 FROM python:3.9
 
-WORKDIR /usr/src/app
+WORKDIR /src
 
 # There are actually no requirements for the server
 # COPY requirements.txt ./
 # RUN pip install --no-cache-dir -r requirements.txt
 
-ENV PORT=8010
-
 COPY . .
 
-CMD [ "python", "./src/server.py", "/tmp/confs/rift_server.conf" ]
+ENTRYPOINT [ "python", "/src/server.py" ]

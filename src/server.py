@@ -117,7 +117,10 @@ class Server(Daemon):
     def sendAll(self, obj):
         for client in self.client_info:
             msg = message.dumps(obj)
-            self.client_info[client].conn.send(msg)
+            try:
+                self.client_info[client].conn.send(msg)
+            except BrokenPipeError:
+                print("Broken Pipe, ignoring failed send")
 
 
 def printUsage():
@@ -135,7 +138,6 @@ def printUsage():
 
 if __name__ == "__main__":
     la = len(sys.argv)
-
     if la < 1 or la > 4:
         printUsage()
         exit(1)

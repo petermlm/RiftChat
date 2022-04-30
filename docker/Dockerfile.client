@@ -1,13 +1,10 @@
 FROM python:3.9
 
-WORKDIR /usr/src/app
+WORKDIR /src
 
 COPY requirements.client.txt ./
 RUN pip install --no-cache-dir -r requirements.client.txt
 
-ENV HOST=127.0.0.1
-ENV PORT=8010
-
 COPY . .
 
-CMD [ "python", "./src/client.py", "/tmp/confs/rift_client.conf" ]
+ENTRYPOINT [ "python", "/src/client.py" ]

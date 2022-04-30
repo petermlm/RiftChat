@@ -6,7 +6,7 @@ class CmdPropmt(urwid.Edit):
     signals = ["done", "scroll_up", "scroll_down"]
 
     def __init__(self, prompt):
-        super(CmdPropmt, self).__init__(prompt)
+        super().__init__(prompt)
 
     def keypress(self, size, key):
         if key == "enter":
@@ -16,7 +16,7 @@ class CmdPropmt(urwid.Edit):
                 return
 
             urwid.emit_signal(self, "done", self, text)
-            super(CmdPropmt, self).set_edit_text("")
+            super().set_edit_text("")
 
             return
 
@@ -37,7 +37,7 @@ class CmdPropmt(urwid.Edit):
             return
 
         elif key == "esc":
-            super(CmdPropmt, self).set_edit_text("")
+            super().set_edit_text("")
             return
 
         urwid.Edit.keypress(self, size, key)
@@ -45,19 +45,18 @@ class CmdPropmt(urwid.Edit):
 
 class ClientInterface:
     def __init__(self, new_cmd_callback):
-        # Every time a new command is instead this call back is called
+        # Every time a new command is entered, this callback is used
         self.new_cmd_callback = new_cmd_callback
 
-        # This list will have the texts in the output area
+        # List with texts in the output area
         self.text_list_walker = urwid.SimpleListWalker([])
         self.text_list = urwid.ListBox(self.text_list_walker)
 
-        # This is a command prompt
+        # Command prompt
         self.cmd_prompt = CmdPropmt("> ")
         self.cmd_prompt_pile = urwid.Pile([self.cmd_prompt])
 
-        # This is the divider that will frame the output are and divide the
-        # # output are from the cmd
+        # Divider between the output area and the area for commands
         self.div = urwid.Divider("=")
 
         # The main layout
@@ -77,10 +76,11 @@ class ClientInterface:
         urwid.connect_signal(self.cmd_prompt, "scroll_up", self.onCmdPromptScrollUp)
         urwid.connect_signal(self.cmd_prompt, "scroll_down", self.onCmdPromptScrollDown)
 
-    def startInterface(self):
+        # Object with main loop
         self.main_loop = urwid.MainLoop(self.main_layout, [])
         self.main_loop.handle_mouse = False
 
+    def startInterface(self):
         try:
             self.main_loop.run()
         except KeyboardInterrupt:
